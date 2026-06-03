@@ -1,0 +1,49 @@
+name: Build TWRP Recovery
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout device tree
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git python3 aria2 openjdk-11-jdk
+
+      - name: Install repo tool
+        run: |
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod +x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Init source
+        run: |
+          mkdir twrp
+          cd twrp
+          repo init -u https://github.com/omnirom/android.git -b android-12.1
+          repo sync -j2
+
+      - name: Clone device tree
+        run: |
+          cd twrp/device/motorola
+          git clone https://github.com/Herick12/android_device_motorola_devonf devonf
+
+      - name: Build
+        run: |
+          cd twrp
+          source build/envsetup.sh
+          lunch twrp_devonf-eng
+          mka recoveryimage
+
+      - name: Upload recovery
+        uses: actions/upload-artifact@v4
+        with:
+          name: twrp-recovery
+          path: twrp/out/target/product/devonf/recovery.img
