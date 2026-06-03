@@ -28,7 +28,7 @@ jobs:
           mkdir twrp
           cd twrp
           repo init -u https://github.com/omnirom/android.git -b android-12.1
-          repo sync -j2
+          repo sync -j2 --no-clone-bundle --no-tags --current-branch --force-sync || repo sync -j1 --fail-fast
 
       - name: Clone device tree
         run: |
