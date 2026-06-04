@@ -11,7 +11,15 @@ jobs:
       - name: Install packages
         run: |
           sudo apt update
-          sudo apt install -y git curl zip unzip ccache automake lzop bison gperf build-essential zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 x11proto-dev libx11-dev libgl1-mesa-dev libxml2-utils xsltproc openjdk-11-jdk python3 rsync libncurses-dev
+          sudo apt install -y \
+          git curl zip unzip ccache automake lzop \
+          bison gperf build-essential \
+          zlib1g-dev gcc-multilib g++-multilib \
+          libc6-dev-i386 \
+          x11proto-dev libx11-dev \
+          libgl1-mesa-dev libxml2-utils xsltproc \
+          openjdk-11-jdk python3 rsync \
+          libncurses-dev
 
       - name: Install repo
         run: |
@@ -24,11 +32,12 @@ jobs:
         run: |
           mkdir twrp
           cd twrp
-          repo init -u https://github.com/omnirom/android.git -b android-12.1 --depth=1
+          repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1 --git-lfs --depth=1
 
       - name: Sync source
         run: |
           cd twrp
+          git config --global url."https://github.com/".insteadOf git@github.com:
           repo sync -c -j4 --force-sync
 
       - name: Clone device tree
