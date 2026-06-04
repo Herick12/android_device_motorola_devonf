@@ -1,60 +1,39 @@
-# Device: Moto G73 (devonf)
-
 DEVICE_PATH := device/motorola/devonf
 
-# Architecture
 TARGET_ARCH := arm64
-TARGET_ARCH_VARIANT := armv8-a
+TARGET_ARCH_VARIANT := armv8-2a
 TARGET_CPU_ABI := arm64-v8a
+TARGET_CPU_ABI2 :=
 TARGET_CPU_VARIANT := generic
 
-# A/B partitioning
-AB_OTA_UPDATER := true
+TARGET_BOARD_PLATFORM := mt6853
+
+TARGET_NO_BOOTLOADER := true
+TARGET_USES_64_BIT_BINDER := true
+
+TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
+
+BOARD_BOOTIMG_HEADER_VERSION := 4
+
+BOARD_KERNEL_BASE := 0x40078000
+BOARD_KERNEL_PAGESIZE := 4096
+
 BOARD_USES_RECOVERY_AS_BOOT := true
-BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
 
-# Dynamic partitions (SUPER)
 BOARD_SUPER_PARTITION_SIZE := 9126805504
-BOARD_SUPER_PARTITION_GROUPS := motorola_dynamic_partitions
+BOARD_SUPER_PARTITION_GROUPS := moto_dynamic_partitions
+BOARD_MOTO_DYNAMIC_PARTITIONS_SIZE := 9122611200
 
-BOARD_MOTOROLA_DYNAMIC_PARTITIONS_PARTITION_LIST := \
-    system \
-    system_ext \
-    vendor \
-    product \
-    vendor_dlkm
+BOARD_FLASH_BLOCK_SIZE := 262144
 
-BOARD_MOTOROLA_DYNAMIC_PARTITIONS_SIZE := 9122611200
-
-# Filesystem support
 TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_USERIMAGES_USE_F2FS := true
 
-# EROFS support (important for your device)
-TARGET_USERIMAGES_USE_EROFS := true
-
-# Recovery
 TW_THEME := portrait_hdpi
+TW_EXTRA_LANGUAGES := true
+
+TW_INCLUDE_FASTBOOTD := true
 TW_USE_TOOLBOX := true
-TW_INCLUDE_CRYPTO := true
-TW_INCLUDE_FBE := true
+TW_HAS_MTP := true
 
-# Storage
-TW_INCLUDE_FUSE_EXFAT := true
-TW_INCLUDE_EXFAT := true
-
-# Platform
-TARGET_BOARD_PLATFORM := mt6855
-
-# Kernel
-TARGET_PREBUILT_KERNEL := device/motorola/devonf/kernel
-
-# Recovery settings
-RECOVERY_SDCARD_ON_DATA := true
-TW_HAS_DOWNLOAD_MODE := true
-TW_USE_TOOLBOX := true
-
-# Encryption base support
-TW_INCLUDE_CRYPTO := true
-TW_INCLUDE_FBE := true
-TW_CRYPTO_USE_SYSTEM_VOLD := true
+TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
