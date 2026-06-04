@@ -1,4 +1,4 @@
-name: Build TWRP Recovery
+name: Build TWRP G73
 
 on:
   workflow_dispatch:
@@ -8,42 +8,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout device tree
-        uses: actions/checkout@v4
+    - name: Install packages
+      run: |
+        sudo apt update
+        sudo apt install -y git ccache automake lzop bison gperf \
+        build-essential zip curl zlib1g-dev gcc-multilib g++-multilib \
+        libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev \
+        lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip \
+        python3 openjdk-11-jdk
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git python3 aria2 openjdk-11-jdk
+    - name: Install repo
+      run: |
+        mkdir -p ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        echo "$HOME/bin" >> $GITHUB_PATH
 
-      - name: Install repo tool
-        run: |
-          mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-          chmod +x ~/bin/repo
-          echo "$HOME/bin" >> $GITHUB_PATH
+    - name: Init source
+      run: |
+        mkdir twrp
+        cd twrp
+        repo init -u https://github.com/omnirom/android.git -b android-12.1 --depth=1
 
-      - name: Init source
-        run: |
-          mkdir twrp
-          cd twrp
-          repo init -u https://github.com/omnirom/android.git -b android-12.1
-          repo sync -j2 --no-clone-bundle --no-tags --current-branch --force-sync || repo sync -j1 --fail-fast
+    - name: Sync minimal
+      run: |
+        cd twrp
+        repo sync -j4 --force-sync bootable/recovery build/make system/core system/vold
 
-      - name: Clone device tree
-        run: |
-          cd twrp/device/motorola
-          git clone https://github.com/Herick12/android_device_motorola_devonf devonf
+    - name: Clone device tree
+      run: |
+        cd twrp
+        git clone https://github.com/Herick12/android_device_motorola_devonf.git device/motorola/devonf
 
-      - name: Build
-        run: |
-          cd twrp
-          source build/envsetup.sh
-          lunch twrp_devonf-eng
-          mka recoveryimage
+    - name: Build recovery
+      run: |
+        cd twrp
+        source build/envsetup.sh
+        lunch omni_devonf-eng
+        mka recoveryimage
 
-      - name: Upload recovery
-        uses: actions/upload-artifact@v4
-        with:
-          name: twrp-recovery
-          path: twrp/out/target/product/devonf/recovery.img
+    - name: Upload recovery
+      uses: actions/upload-artifact@v4
+      with:
+        name: twrp-devonf
+        path: twrp/out/target/product/devonf/recovery.img
