@@ -6,6 +6,5 @@ PRODUCT_MANUFACTURER := motorola
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/base.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/handheld_system.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/product/recovery.mk)
 
 PRODUCT_PACKAGES :=
