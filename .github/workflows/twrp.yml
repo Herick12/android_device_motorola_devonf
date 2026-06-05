@@ -1,101 +1,101 @@
 name: Build TWRP G73 Minimal
 
 on:
-workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-build:
-runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Cleanup workspace
-    run: |
-      rm -rf ~/twrp
-      sudo rm -rf /usr/share/dotnet
-      sudo rm -rf /opt/ghc
-      sudo rm -rf /usr/local/lib/android
-      sudo docker image prune -af || true
-      df -h
+    steps:
+      - name: Cleanup workspace
+        run: |
+          rm -rf ~/twrp
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo docker image prune -af || true
+          df -h
 
-  - name: Install packages
-    run: |
-      sudo apt update
-      sudo apt install -y \
-      git curl zip unzip ccache automake lzop \
-      bison gperf build-essential \
-      zlib1g-dev gcc-multilib g++-multilib \
-      libc6-dev-i386 \
-      x11proto-dev libx11-dev \
-      libgl1-mesa-dev libxml2-utils xsltproc \
-      openjdk-11-jdk python3 rsync \
-      libncurses-dev
+      - name: Install packages
+        run: |
+          sudo apt update
+          sudo apt install -y \
+          git curl zip unzip ccache automake lzop \
+          bison gperf build-essential \
+          zlib1g-dev gcc-multilib g++-multilib \
+          libc6-dev-i386 \
+          x11proto-dev libx11-dev \
+          libgl1-mesa-dev libxml2-utils xsltproc \
+          openjdk-11-jdk python3 rsync \
+          libncurses-dev
 
-  - name: Install repo
-    run: |
-      mkdir -p ~/bin
-      curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-      chmod +x ~/bin/repo
-      echo "$HOME/bin" >> $GITHUB_PATH
+      - name: Install repo
+        run: |
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod +x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
 
-  - name: Init source
-    run: |
-      mkdir twrp
-      cd twrp
-      repo init \
-      -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
-      -b twrp-12.1 \
-      --git-lfs
+      - name: Init source
+        run: |
+          mkdir twrp
+          cd twrp
+          repo init \
+          -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
+          -b twrp-12.1 \
+          --git-lfs
 
-  - name: Sync source
-    run: |
-      cd twrp
-      git config --global url."https://github.com/".insteadOf git@github.com:
-      repo sync -c --force-sync --no-clone-bundle --no-tags -j2
+      - name: Sync source
+        run: |
+          cd twrp
+          git config --global url."https://github.com/".insteadOf git@github.com:
+          repo sync -c --force-sync --no-clone-bundle --no-tags -j2
 
-  - name: Clone device tree
-    run: |
-      cd twrp
-      git clone https://github.com/Herick12/android_device_motorola_devonf.git device/motorola/devonf
+      - name: Clone device tree
+        run: |
+          cd twrp
+          git clone https://github.com/Herick12/android_device_motorola_devonf.git device/motorola/devonf
 
-  - name: Build recovery
-    run: |
-      cd twrp
+      - name: Build recovery
+        run: |
+          cd twrp
 
-      find hardware/interfaces -name "Android.bp" -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
-      find vendor/qcom -name "Android.bp" -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
+          find hardware/interfaces -name "Android.bp" -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
+          find vendor/qcom -name "Android.bp" -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
 
-      source build/envsetup.sh
+          source build/envsetup.sh
 
-      export ALLOW_MISSING_DEPENDENCIES=true
-      export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-      export TARGET_BUILD_APPS=""
-      export SKIP_ABI_CHECKS=true
-      export TARGET_NO_TESTS=true
-      export SKIP_CTS_TESTS=true
-      export BUILD_BROKEN_DUP_RULES=true
-      export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
+          export TARGET_BUILD_APPS=""
+          export SKIP_ABI_CHECKS=true
+          export TARGET_NO_TESTS=true
+          export SKIP_CTS_TESTS=true
+          export BUILD_BROKEN_DUP_RULES=true
+          export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
 
-      lunch omni_devonf-eng
+          lunch omni_devonf-eng
 
-      mka recoveryimage vendorbootimage bootimage -j2
+          mka recoveryimage vendorbootimage bootimage -j2
 
-      echo "=== Arquivos gerados ==="
-      find out/target/product/devonf/ -type f | grep -E "recovery|boot|vendor_boot|vendorboot|img" || true
+          echo "=== Arquivos gerados ==="
+          find out/target/product/devonf/ -type f | grep -E "recovery|boot|vendor_boot|vendorboot|img" || true
 
-  - name: Prepare artifacts
-    run: |
-      mkdir -p upload
+      - name: Prepare artifacts
+        run: |
+          mkdir -p upload
 
-      cp twrp/out/target/product/devonf/recovery.img upload/ 2>/dev/null || true
-      cp twrp/out/target/product/devonf/boot.img upload/ 2>/dev/null || true
-      cp twrp/out/target/product/devonf/vendor_boot.img upload/ 2>/dev/null || true
-      cp twrp/out/target/product/devonf/vendorboot.img upload/ 2>/dev/null || true
-      cp twrp/out/target/product/devonf/recovery_ramdisk.img upload/ 2>/dev/null || true
+          cp twrp/out/target/product/devonf/recovery.img upload/ 2>/dev/null || true
+          cp twrp/out/target/product/devonf/boot.img upload/ 2>/dev/null || true
+          cp twrp/out/target/product/devonf/vendor_boot.img upload/ 2>/dev/null || true
+          cp twrp/out/target/product/devonf/vendorboot.img upload/ 2>/dev/null || true
+          cp twrp/out/target/product/devonf/recovery_ramdisk.img upload/ 2>/dev/null || true
 
-      ls -lah upload/
+          ls -lah upload/
 
-  - name: Upload recovery
-    uses: actions/upload-artifact@v4
-    with:
-      name: twrp-devonf
-      path: upload/*
+      - name: Upload recovery
+        uses: actions/upload-artifact@v4
+        with:
+          name: twrp-devonf
+          path: upload/*
