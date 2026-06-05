@@ -1,4 +1,4 @@
-name: Build TWRP G73
+name: Build TWRP G73 Minimal
 
 on:
   workflow_dispatch:
@@ -8,6 +8,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Cleanup workspace
+        run: |
+          rm -rf ~/twrp
+
       - name: Install packages
         run: |
           sudo apt update
@@ -34,11 +38,11 @@ jobs:
           cd twrp
           repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1 --git-lfs --depth=1
 
-      - name: Sync source
+      - name: Sync source minimal
         run: |
           cd twrp
           git config --global url."https://github.com/".insteadOf git@github.com:
-          repo sync -c -j4 --force-sync
+          repo sync -c --force-sync --no-tags --depth=1 -j4
 
       - name: Clone device tree
         run: |
@@ -49,7 +53,6 @@ jobs:
         run: |
           cd twrp
           source build/envsetup.sh
-          # Ignorar apps, testes e fuzzers para Soong minimal
           export TARGET_BUILD_APPS=""
           export SKIP_ABI_CHECKS=true
           export SKIP_VTS_FUZZERS=true
