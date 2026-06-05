@@ -8,4 +8,4 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/base.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/handheld_system.mk)
 
 PRODUCT_PACKAGES += \
-    busybox
+    recovery
