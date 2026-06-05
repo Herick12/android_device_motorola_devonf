@@ -1,4 +1,4 @@
-name: Continue Build TWRP Devonf
+name: Build TWRP Devonf Fixed
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Free disk space WITHOUT deleting twrp
+      - name: Free disk space
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -37,33 +37,54 @@ jobs:
           chmod +x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
 
-      - name: Restore source if missing
+      - name: Init source
         run: |
-          if [ ! -d twrp ]; then
-            mkdir twrp
-            cd twrp
+          mkdir -p twrp
+          cd twrp
 
-            repo init \
-            -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
-            -b twrp-12.1 \
-            --git-lfs
+          repo init \
+          -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
+          -b twrp-12.1 \
+          --git-lfs
 
-            repo sync -c --force-sync --no-clone-bundle --no-tags -j2
-
-            git clone \
-            https://github.com/Herick12/android_device_motorola_devonf.git \
-            device/motorola/devonf
-          fi
-
-      - name: Continue build
+      - name: Sync source
         run: |
           cd twrp
 
-          find hardware/interfaces -name "Android.bp" \
+          git config --global url."https://github.com/".insteadOf git@github.com:
+
+          repo sync \
+          -c \
+          --force-sync \
+          --no-clone-bundle \
+          --no-tags \
+          -j2
+
+      - name: Clone device tree
+        run: |
+          cd twrp
+
+          rm -rf device/motorola/devonf
+
+          git clone \
+          https://github.com/Herick12/android_device_motorola_devonf.git \
+          device/motorola/devonf
+
+      - name: Fix VTS fuzzer errors
+        run: |
+          cd twrp
+
+          find hardware/interfaces \
+          -name "Android.bp" \
           -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
 
-          find vendor/qcom -name "Android.bp" \
+          find vendor/qcom \
+          -name "Android.bp" \
           -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
+
+      - name: Build recovery
+        run: |
+          cd twrp
 
           source build/envsetup.sh
 
@@ -78,7 +99,7 @@ jobs:
 
           lunch omni_devonf-eng
 
-          mka recoveryimage vendorbootimage bootimage -j2 || true
+          mka recoveryimage vendorbootimage bootimage -j2
 
           echo "=== TODOS OS .IMG GERADOS ==="
           find out/target/product/devonf/ -name "*.img"
@@ -94,8 +115,11 @@ jobs:
           echo "=== ARQUIVOS PARA UPLOAD ==="
           ls -lah upload/
 
+          test "$(ls -A upload)" || \
+          (echo "Nenhuma imagem gerada!" && exit 1)
+
       - name: Upload files
         uses: actions/upload-artifact@v4
         with:
           name: twrp-devonf
-          path: upload/
+          path: upload/*
