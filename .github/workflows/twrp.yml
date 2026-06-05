@@ -1,4 +1,4 @@
-name: Build TWRP G73 Minimal
+name: Continue Build TWRP Devonf
 
 on:
   workflow_dispatch:
@@ -8,26 +8,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Cleanup workspace
+      - name: Free disk space WITHOUT deleting twrp
         run: |
-          rm -rf ~/twrp
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/lib/android
           sudo docker image prune -af || true
+          sudo apt clean
           df -h
 
       - name: Install packages
         run: |
           sudo apt update
-          sudo DEBIAN_FRONTEND=noninteractive apt install -y \
+          sudo apt install -y \
           git curl zip unzip ccache automake lzop \
           bison gperf build-essential \
           zlib1g-dev gcc-multilib g++-multilib \
           libc6-dev-i386 \
-          libxml2-utils xsltproc \
-          openjdk-11-jdk-headless \
-          python3 rsync \
+          x11proto-dev libx11-dev \
+          libgl1-mesa-dev libxml2-utils xsltproc \
+          openjdk-11-jdk python3 rsync \
           libncurses-dev
 
       - name: Install repo
@@ -37,34 +37,33 @@ jobs:
           chmod +x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
 
-      - name: Init source
+      - name: Restore source if missing
         run: |
-          mkdir twrp
-          cd twrp
-          repo init \
-          -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
-          -b twrp-12.1 \
-          --git-lfs
+          if [ ! -d twrp ]; then
+            mkdir twrp
+            cd twrp
 
-      - name: Sync source
-        run: |
-          cd twrp
-          git config --global url."https://github.com/".insteadOf git@github.com:
-          repo sync -c --force-sync --no-clone-bundle --no-tags -j2
+            repo init \
+            -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
+            -b twrp-12.1 \
+            --git-lfs
 
-      - name: Clone device tree
-        run: |
-          cd twrp
-          rm -rf device/motorola/devonf
-          git clone https://github.com/Herick12/android_device_motorola_devonf.git device/motorola/devonf
+            repo sync -c --force-sync --no-clone-bundle --no-tags -j2
 
-      - name: Build recovery
+            git clone \
+            https://github.com/Herick12/android_device_motorola_devonf.git \
+            device/motorola/devonf
+          fi
+
+      - name: Continue build
         run: |
           cd twrp
 
-          # Corrigir erros de módulos VTS/Fuzzer
-          find hardware/interfaces -name "Android.bp" -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
-          find vendor/qcom -name "Android.bp" -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
+          find hardware/interfaces -name "Android.bp" \
+          -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
+
+          find vendor/qcom -name "Android.bp" \
+          -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
 
           source build/envsetup.sh
 
@@ -79,31 +78,24 @@ jobs:
 
           lunch omni_devonf-eng
 
-          # Tentar gerar recovery
-          mka recoveryimage -j2 || true
+          mka recoveryimage vendorbootimage bootimage -j2 || true
 
-          # Em aparelhos A/B (como G73) geralmente sai em vendor_boot
-          mka vendorbootimage -j2 || true
-          mka bootimage -j2 || true
+          echo "=== TODOS OS .IMG GERADOS ==="
+          find out/target/product/devonf/ -name "*.img"
 
-          echo "=== Arquivos gerados ==="
-          find out/target/product/devonf/ -type f | grep -E "recovery|boot|vendor_boot|vendorboot|img" || true
-
-      - name: Prepare artifacts
+      - name: Prepare upload
         run: |
           mkdir -p upload
 
-          cp twrp/out/target/product/devonf/recovery.img upload/ 2>/dev/null || true
-          cp twrp/out/target/product/devonf/boot.img upload/ 2>/dev/null || true
-          cp twrp/out/target/product/devonf/vendor_boot.img upload/ 2>/dev/null || true
-          cp twrp/out/target/product/devonf/vendorboot.img upload/ 2>/dev/null || true
-          cp twrp/out/target/product/devonf/recovery_ramdisk.img upload/ 2>/dev/null || true
+          find twrp/out/target/product/devonf/ \
+          -name "*.img" \
+          -exec cp {} upload/ \;
 
-          echo "=== Arquivos para upload ==="
-          ls -lah upload/ || true
+          echo "=== ARQUIVOS PARA UPLOAD ==="
+          ls -lah upload/
 
-      - name: Upload recovery
+      - name: Upload files
         uses: actions/upload-artifact@v4
         with:
           name: twrp-devonf
-          path: upload/*
+          path: upload/
