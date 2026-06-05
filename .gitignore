@@ -1,0 +1,6 @@
+out/
+*.img
+*.cpio
+boot.img
+vendor_boot.img
+dtb/
