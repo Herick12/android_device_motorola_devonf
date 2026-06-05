@@ -61,15 +61,24 @@ jobs:
       - name: Build recovery
         run: |
           cd twrp
+
+          # Corrigir erros dos fuzzers VTS
+          find hardware/interfaces -name "Android.bp" -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
+          find vendor/qcom -name "Android.bp" -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
+
           source build/envsetup.sh
+
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           export TARGET_BUILD_APPS=""
           export SKIP_ABI_CHECKS=true
-          export SKIP_VTS_FUZZERS=true
           export TARGET_NO_TESTS=true
           export SKIP_CTS_TESTS=true
-          export SKIP_VENDOR_FUZZERS=true
+          export BUILD_BROKEN_DUP_RULES=true
+          export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
+
           lunch omni_devonf-eng
-          mka recoveryimage
+          mka recoveryimage -j2
 
       - name: Upload recovery
         uses: actions/upload-artifact@v4
