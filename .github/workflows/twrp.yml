@@ -52,6 +52,7 @@ jobs:
           export TARGET_BUILD_APPS=""
           export SKIP_ABI_CHECKS=true
           export SKIP_VTS_FUZZERS=true
+          export TARGET_NO_TESTS=true
           lunch omni_devonf-eng
           mka recoveryimage
 
