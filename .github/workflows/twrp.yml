@@ -49,6 +49,7 @@ jobs:
         run: |
           cd twrp
           source build/envsetup.sh
+          export TARGET_BUILD_APPS=""
           lunch omni_devonf-eng
           mka recoveryimage
 
