@@ -1,0 +1,6 @@
+<manifest>
+  <project name="Herick12/android_device_motorola_devonf"
+           path="device/motorola/devonf"
+           remote="github"
+           revision="main" />
+</manifest>
