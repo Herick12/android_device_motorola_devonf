@@ -1,10 +1,16 @@
+$(call inherit-product, vendor/twrp/config/common.mk)
+$(call inherit-product, device/motorola/devonf/device.mk)
+
 PRODUCT_DEVICE := devonf
 PRODUCT_NAME := omni_devonf
 PRODUCT_BRAND := motorola
 PRODUCT_MODEL := Moto G73
 PRODUCT_MANUFACTURER := motorola
 
-$(call inherit-product, $(SRC_TARGET_DIR)/product/base.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/product/handheld_system.mk)
+PRODUCT_PACKAGES += \
+    twrp \
+    recovery \
+    libtar \
+    toolbox
 
-PRODUCT_PACKAGES :=
+RECOVERY_VARIANT := twrp
