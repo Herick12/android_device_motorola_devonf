@@ -15,20 +15,14 @@ jobs:
           sudo rm -rf /usr/local/lib/android
           sudo docker image prune -af || true
           sudo apt clean
-          df -h
 
       - name: Install packages
         run: |
           sudo apt update
-          sudo apt install -y \
-          git curl zip unzip ccache automake lzop \
-          bison gperf build-essential \
-          zlib1g-dev gcc-multilib g++-multilib \
-          libc6-dev-i386 \
-          x11proto-dev libx11-dev \
-          libgl1-mesa-dev libxml2-utils xsltproc \
-          openjdk-11-jdk python3 rsync \
-          libncurses-dev
+          sudo apt install -y git curl zip unzip ccache automake lzop \
+          bison gperf build-essential zlib1g-dev gcc-multilib g++-multilib \
+          libc6-dev-i386 libx11-dev libgl1-mesa-dev libxml2-utils xsltproc \
+          openjdk-11-jdk python3 rsync libncurses-dev
 
       - name: Install repo
         run: |
@@ -37,50 +31,35 @@ jobs:
           chmod +x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
 
-      - name: Init source
+      - name: Init repo
         run: |
-          mkdir -p twrp
+          mkdir twrp
           cd twrp
 
           repo init \
-          -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
-          -b twrp-12.1 \
-          --git-lfs
+            -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
+            -b twrp-12.1 \
+            --git-lfs
+
+          mkdir -p .repo/local_manifests
+
+      - name: Add local manifest
+        run: |
+          cd twrp
+
+          cat <<EOF > .repo/local_manifests/roomservice.xml
+<manifest>
+  <project name="Herick12/android_device_motorola_devonf"
+           path="device/motorola/devonf"
+           remote="github"
+           revision="main" />
+</manifest>
+EOF
 
       - name: Sync source
         run: |
           cd twrp
-
-          git config --global url."https://github.com/".insteadOf git@github.com:
-
-          repo sync \
-          -c \
-          --force-sync \
-          --no-clone-bundle \
-          --no-tags \
-          -j2
-
-      - name: Clone device tree
-        run: |
-          cd twrp
-
-          rm -rf device/motorola/devonf
-
-          git clone \
-          https://github.com/Herick12/android_device_motorola_devonf.git \
-          device/motorola/devonf
-
-      - name: Fix VTS fuzzer errors
-        run: |
-          cd twrp
-
-          find hardware/interfaces \
-          -name "Android.bp" \
-          -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
-
-          find vendor/qcom \
-          -name "Android.bp" \
-          -exec sed -i '/vts_proto_fuzzer_default/d' {} \; || true
+          repo sync -c --force-sync --no-clone-bundle --no-tags -j2
 
       - name: Build recovery
         run: |
@@ -89,37 +68,14 @@ jobs:
           source build/envsetup.sh
 
           export ALLOW_MISSING_DEPENDENCIES=true
-          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-          export TARGET_BUILD_APPS=""
-          export SKIP_ABI_CHECKS=true
-          export TARGET_NO_TESTS=true
-          export SKIP_CTS_TESTS=true
-          export BUILD_BROKEN_DUP_RULES=true
-          export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
+          export TARGET_NO_KERNEL=true
 
           lunch omni_devonf-eng
 
-          mka recoveryimage vendorbootimage bootimage -j2
-
-          echo "=== TODOS OS .IMG GERADOS ==="
-          find out/target/product/devonf/ -name "*.img"
-
-      - name: Prepare upload
-        run: |
-          mkdir -p upload
-
-          find twrp/out/target/product/devonf/ \
-          -name "*.img" \
-          -exec cp {} upload/ \;
-
-          echo "=== ARQUIVOS PARA UPLOAD ==="
-          ls -lah upload/
-
-          test "$(ls -A upload)" || \
-          (echo "Nenhuma imagem gerada!" && exit 1)
+          mka recoveryimage -j2
 
       - name: Upload files
         uses: actions/upload-artifact@v4
         with:
           name: twrp-devonf
-          path: upload/*
+          path: twrp/out/target/product/devonf/*.img
