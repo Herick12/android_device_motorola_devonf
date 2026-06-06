@@ -1,5 +1,17 @@
-/dev/block/bootdevice/by-name/boot     /boot       emmc    defaults
-/dev/block/bootdevice/by-name/recovery /recovery   emmc    defaults
-/dev/block/bootdevice/by-name/system   /system     ext4    ro,barrier=1
-/dev/block/bootdevice/by-name/vendor   /vendor     ext4    ro,barrier=1
-/dev/block/bootdevice/by-name/data     /data       ext4    noatime,nosuid,nodev,discard
+/dev/block/bootdevice/by-name/boot        /boot       emmc   defaults
+
+/dev/block/bootdevice/by-name/super       /super      emmc   defaults
+
+/dev/block/mapper/system_a                /system     erofs  ro
+/dev/block/mapper/system_b                /system_ext erofs  ro
+
+/dev/block/mapper/vendor_a                /vendor     erofs  ro
+/dev/block/mapper/vendor_b                /vendor     erofs  ro
+
+/dev/block/mapper/product_a               /product    erofs  ro
+/dev/block/mapper/product_b               /product    erofs  ro
+
+/dev/block/mapper/odm_a                  /odm        erofs  ro
+/dev/block/mapper/odm_b                  /odm        erofs  ro
+
+/dev/block/bootdevice/by-name/userdata   /data       f2fs   nosuid,nodev,discard
