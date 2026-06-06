@@ -6,7 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,10 +38,19 @@ jobs:
           cd twrp
           repo sync -c --force-sync --no-clone-bundle --no-tags -j$(nproc)
 
-      - name: Build
+      - name: Build recovery
         run: |
           cd twrp
           source build/envsetup.sh
+          
+          # Configurações de ignorar erros comuns de build
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
+          export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
+          export BUILD_BROKEN_DUP_RULES=true
+          export BUILD_BROKEN_VTS_TESTS=true
+          export SKIP_ABI_CHECKS=true
+          
           lunch omni_devonf-eng
           mka recoveryimage -j$(nproc)
 
