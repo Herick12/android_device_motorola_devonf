@@ -24,14 +24,14 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y \
-          git curl zip unzip ccache automake lzop \
-          bison gperf build-essential \
-          zlib1g-dev gcc-multilib g++-multilib \
-          libc6-dev-i386 \
-          x11proto-dev libx11-dev \
-          libgl1-mesa-dev libxml2-utils xsltproc \
-          openjdk-11-jdk python3 rsync \
-          libncurses-dev bc flex libssl-dev
+            git curl zip unzip ccache automake lzop \
+            bison gperf build-essential \
+            zlib1g-dev gcc-multilib g++-multilib \
+            libc6-dev-i386 \
+            x11proto-dev libx11-dev \
+            libgl1-mesa-dev libxml2-utils xsltproc \
+            openjdk-11-jdk python3 rsync \
+            libncurses-dev bc flex libssl-dev
 
       - name: Install repo
         run: |
@@ -44,79 +44,32 @@ jobs:
         run: |
           mkdir twrp
           cd twrp
-
           repo init \
-          -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
-          -b twrp-12.1 \
-          --git-lfs
+            -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
+            -b twrp-12.1 \
+            --git-lfs
 
       - name: Add manifest
         run: |
           mkdir -p twrp/.repo/local_manifests
-
           cat <<EOF > twrp/.repo/local_manifests/roomservice.xml
           <?xml version="1.0" encoding="UTF-8"?>
           <manifest>
-            <project
-              name="Herick12/android_device_motorola_devonf"
-              path="device/motorola/devonf"
-              remote="github"
-              revision="main" />
+            <project name="Herick12/android_device_motorola_devonf" path="device/motorola/devonf" remote="github" revision="main" />
           </manifest>
           EOF
 
       - name: Sync sources
         run: |
           cd twrp
-
           git config --global url."https://github.com/".insteadOf git@github.com:
-
-          repo sync \
-          -c \
-          --force-sync \
-          --no-clone-bundle \
-          --no-tags \
-          -j4
-
-      - name: Fix device tree
-        run: |
-          cd twrp
-
-          echo "=== PATCHING BOARDCONFIG ==="
-
-          cat >> device/motorola/devonf/BoardConfig.mk <<EOF
-
-          TARGET_NO_KERNEL := false
-          TARGET_NO_RECOVERY := false
-
-          BOARD_USES_RECOVERY_AS_BOOT := true
-
-          TARGET_RECOVERY_FSTAB := device/motorola/devonf/recovery.fstab
-
-          BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
-          BOARD_SUPPRESS_SECURE_ERASE := true
-          BOARD_HAS_LARGE_FILESYSTEM := true
-
-          TARGET_COPY_OUT_VENDOR := vendor
-          TARGET_COPY_OUT_PRODUCT := product
-          TARGET_COPY_OUT_SYSTEM_EXT := system_ext
-
-          RECOVERY_SDCARD_ON_DATA := true
-          BOARD_HAS_NO_SELECT_BUTTON := true
-          TARGET_USERIMAGES_USE_EXT4 := true
-          EOF
-
-          echo "=== PATCHING DEVICE.MK ==="
-
-          echo "" >> device/motorola/devonf/device.mk
-          echo "PRODUCT_PACKAGES += \\" >> device/motorola/devonf/device.mk
-          echo "    twrp" >> device/motorola/devonf/device.mk
+          repo sync -c --force-sync --no-clone-bundle --no-tags -j$(nproc)
 
       - name: Build
         run: |
           cd twrp
           source build/envsetup.sh
-
+          
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           export TARGET_BUILD_APPS=""
@@ -125,41 +78,25 @@ jobs:
           export SKIP_CTS_TESTS=true
           export BUILD_BROKEN_DUP_RULES=true
           export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
-
+          
           lunch omni_devonf-eng
-
+          
           echo "=== CLEAN ==="
           make clean
-
-          echo "=== BUILD BOOTIMAGE ==="
-          mka bootimage -j4 || true
-
-          echo "=== BUILD VENDOR_BOOT ==="
-          mka vendorbootimage -j4 || true
-
-          echo "=== BUILD DTBO ==="
-          mka dtboimage -j4 || true
-
-          echo "=== TODOS OS ARQUIVOS GERADOS ==="
-          find out/target/product/devonf/ -type f
-
-          echo "=== IMAGENS GERADAS ==="
-          find out/target/product/devonf/ -name "*.img"
+          
+          echo "=== BUILD IMAGES ==="
+          mka bootimage vendorbootimage dtboimage recoveryimage -j$(nproc)
 
       - name: Prepare upload
         run: |
           mkdir -p upload
-
-          find twrp/out/target/product/devonf/ \
-          -name "*.img" \
-          -exec cp {} upload/ \;
-
+          find twrp/out/target/product/devonf/ -name "*.img" -exec cp {} upload/ \;
+          
           echo "=== ARQUIVOS PARA UPLOAD ==="
           ls -lah upload/ || true
-
+          
           if [ -z "$(ls -A upload 2>/dev/null)" ]; then
             echo "ERRO: Nenhuma imagem gerada!"
-            find twrp/out/target/product/devonf/ -type f
             exit 1
           fi
 
@@ -168,3 +105,4 @@ jobs:
         with:
           name: twrp-devonf
           path: upload/*
+          
