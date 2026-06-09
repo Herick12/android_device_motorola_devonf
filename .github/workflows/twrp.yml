@@ -126,20 +126,25 @@ jobs:
 
           lunch omni_devonf-eng
           
-          # Removemos o make clean para manter os arquivos que já foram compilados
-          # e focamos no alvo direto do bootimage.
-          mka bootimage -j2
+          # CRÍTICO: Criar a estrutura de diretórios manualmente antes do build
+          mkdir -p out/target/product/devonf/root
+          
+          # Primeiro geramos o ramdisk base
+          mka ramdisk -j2
+          
+          # Depois compilamos o recovery/boot
+          mka recoveryimage -j2
 
       - name: Prepare files
         run: |
           mkdir -p upload
-          # Buscamos especificamente pelo boot.img que é o que você precisa
-          find twrp/out/target/product/devonf -name "boot.img" -exec cp {} upload/ \;
+          # Copia tudo que for .img, pois o dispositivo usa boot.img como recovery
+          find twrp/out/target/product/devonf -name "*.img" -exec cp {} upload/ \;
           ls -lah upload
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: twrp-devonf-boot
+          name: twrp-devonf-images
           path: upload/*
           
