@@ -125,29 +125,21 @@ jobs:
           export SKIP_CTS_TESTS=true
 
           lunch omni_devonf-eng
-
-          # Força a criação da pasta que o rsync não encontra
-          mkdir -p out/target/product/devonf/root
           
-          make clean
-          
-          # Tenta gerar o ramdisk primeiro
-          mka ramdisk -j2
-          mka recoveryimage -j2
+          # Removemos o make clean para manter os arquivos que já foram compilados
+          # e focamos no alvo direto do bootimage.
+          mka bootimage -j2
 
       - name: Prepare files
         run: |
           mkdir -p upload
-
-          find twrp/out/target/product/devonf \
-            -name "*.img" \
-            -exec cp {} upload/ \;
-
+          # Buscamos especificamente pelo boot.img que é o que você precisa
+          find twrp/out/target/product/devonf -name "boot.img" -exec cp {} upload/ \;
           ls -lah upload
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: twrp-devonf
+          name: twrp-devonf-boot
           path: upload/*
           
