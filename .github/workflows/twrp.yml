@@ -126,13 +126,13 @@ jobs:
 
           lunch omni_devonf-eng
 
+          # Força a criação da pasta que o rsync não encontra
+          mkdir -p out/target/product/devonf/root
+          
           make clean
           
-          # Sequência crítica para evitar erro de rsync (gera estrutura de root)
-          echo "=== BUILD BOOTIMAGE PARA ESTRUTURA RAMDISK ==="
-          mka bootimage -j2
-          
-          echo "=== BUILD RECOVERY ==="
+          # Tenta gerar o ramdisk primeiro
+          mka ramdisk -j2
           mka recoveryimage -j2
 
       - name: Prepare files
@@ -150,3 +150,4 @@ jobs:
         with:
           name: twrp-devonf
           path: upload/*
+          
