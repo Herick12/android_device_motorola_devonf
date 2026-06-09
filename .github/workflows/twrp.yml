@@ -126,25 +126,20 @@ jobs:
 
           lunch omni_devonf-eng
           
-          # CRÍTICO: Criar a estrutura de diretórios manualmente antes do build
-          mkdir -p out/target/product/devonf/root
-          
-          # Primeiro geramos o ramdisk base
-          mka ramdisk -j2
-          
-          # Depois compilamos o recovery/boot
-          mka recoveryimage -j2
+          # Removido o make clean para permitir que o sistema identifique as dependências
+          # Comando bootimage é o correto para dispositivos Recovery-as-Boot
+          mka bootimage -j4
 
       - name: Prepare files
         run: |
           mkdir -p upload
-          # Copia tudo que for .img, pois o dispositivo usa boot.img como recovery
+          # Copia todos os arquivos .img encontrados para garantir que o boot.img seja capturado
           find twrp/out/target/product/devonf -name "*.img" -exec cp {} upload/ \;
           ls -lah upload
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: twrp-devonf-images
+          name: twrp-devonf-final
           path: upload/*
           
