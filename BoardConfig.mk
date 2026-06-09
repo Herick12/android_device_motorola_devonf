@@ -1,71 +1,219 @@
-DEVICE_PATH := device/motorola/devonf
+name: Build TWRP Devonf Fixed
 
-TARGET_ARCH := arm64
-TARGET_ARCH_VARIANT := armv8-a
-TARGET_CPU_ABI := arm64-v8a
+on:
+  workflow_dispatch:
 
-TARGET_2ND_ARCH := arm
-TARGET_2ND_ARCH_VARIANT := armv8-a
-TARGET_2ND_CPU_ABI := armeabi-v7a
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-TARGET_BOARD_PLATFORM := mt6855
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-TARGET_NO_BOOTLOADER := true
-TARGET_NO_RADIOIMAGE := true
-TARGET_NO_KERNEL := false
-TARGET_NO_RECOVERY := true
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo docker image prune -af || true
+          sudo apt clean
+          df -h
 
-TARGET_SUPPORTS_64_BIT_APPS := true
-TARGET_USES_64_BIT_BINDER := true
+      - name: Install packages
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            git curl zip unzip ccache automake lzop \
+            bison gperf build-essential \
+            zlib1g-dev gcc-multilib g++-multilib \
+            libc6-dev-i386 \
+            x11proto-dev libx11-dev \
+            libgl1-mesa-dev libxml2-utils xsltproc \
+            openjdk-11-jdk python3 rsync \
+            libncurses-dev bc flex libssl-dev
 
-BOARD_BOOTIMG_HEADER_VERSION := 4
+      - name: Install repo
+        run: |
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod +x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
 
-BOARD_KERNEL_BASE := 0x40078000
-BOARD_KERNEL_PAGESIZE := 4096
-BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
-BOARD_KERNEL_CMDLINE := androidboot.hardware=mt6855
+      - name: Init repo
+        run: |
+          mkdir twrp
+          cd twrp
 
-TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
+          repo init \
+            -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
+            -b twrp-12.1 \
+            --git-lfs
 
-BOARD_USES_RECOVERY_AS_BOOT := true
-BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := true
+      - name: Add manifest
+        run: |
+          mkdir -p twrp/.repo/local_manifests
 
-BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
-BOARD_SUPPRESS_SECURE_ERASE := true
-BOARD_HAS_LARGE_FILESYSTEM := true
+          cat <<EOF > twrp/.repo/local_manifests/roomservice.xml
+          <?xml version="1.0" encoding="UTF-8"?>
+          <manifest>
+            <project
+              name="Herick12/android_device_motorola_devonf"
+              path="device/motorola/devonf"
+              remote="github"
+              revision="main" />
+          </manifest>
+          EOF
 
-BOARD_FLASH_BLOCK_SIZE := 262144
+      - name: Sync sources
+        run: |
+          cd twrp
 
-BOARD_SUPER_PARTITION_SIZE := 9126805504
-BOARD_SUPER_PARTITION_GROUPS := moto_dynamic_partitions
-BOARD_MOTO_DYNAMIC_PARTITIONS_SIZE := 9122611200
-BOARD_MOTO_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor product odm system_ext
+          git config --global url."https://github.com/".insteadOf git@github.com:
 
-TARGET_COPY_OUT_VENDOR := vendor
-TARGET_COPY_OUT_PRODUCT := product
-TARGET_COPY_OUT_SYSTEM_EXT := system_ext
+          repo sync \
+            -c \
+            --force-sync \
+            --no-clone-bundle \
+            --no-tags \
+            -j4
 
-BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
+      - name: Patch BoardConfig
+        run: |
+          cd twrp
 
-TARGET_USERIMAGES_USE_EXT4 := true
-TARGET_USERIMAGES_USE_F2FS := true
+          cat > device/motorola/devonf/BoardConfig.mk <<EOF
+          DEVICE_PATH := device/motorola/devonf
 
-TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
+          TARGET_ARCH := arm64
+          TARGET_ARCH_VARIANT := armv8-a
+          TARGET_CPU_ABI := arm64-v8a
 
-RECOVERY_SDCARD_ON_DATA := true
-BOARD_HAS_NO_SELECT_BUTTON := true
+          TARGET_2ND_ARCH := arm
+          TARGET_2ND_ARCH_VARIANT := armv8-a
+          TARGET_2ND_CPU_ABI := armeabi-v7a
 
-TW_THEME := portrait_hdpi
-TW_EXTRA_LANGUAGES := true
-TW_USE_TOOLBOX := true
-TW_HAS_MTP := true
-TW_INCLUDE_FASTBOOTD := true
-TW_INCLUDE_CRYPTO := true
-TW_INCLUDE_NTFS := true
-TW_INCLUDE_REPACKTOOLS := true
+          TARGET_BOARD_PLATFORM := mt6855
 
-TW_INCLUDE_RECOVERY_FSTAB := true
-TW_EXCLUDE_DEFAULT_USB_INIT := true
+          TARGET_NO_BOOTLOADER := true
+          TARGET_NO_RADIOIMAGE := true
+          TARGET_NO_KERNEL := false
+          TARGET_NO_RECOVERY := true
+
+          TARGET_SUPPORTS_64_BIT_APPS := true
+          TARGET_USES_64_BIT_BINDER := true
+
+          BOARD_BOOTIMG_HEADER_VERSION := 4
+
+          BOARD_KERNEL_BASE := 0x40078000
+          BOARD_KERNEL_PAGESIZE := 4096
+          BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
+          BOARD_KERNEL_CMDLINE := androidboot.hardware=mt6855
+
+          TARGET_PREBUILT_KERNEL := \$(DEVICE_PATH)/prebuilt/kernel
+
+          BOARD_USES_RECOVERY_AS_BOOT := true
+          BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := true
+
+          BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
+          BOARD_SUPPRESS_SECURE_ERASE := true
+          BOARD_HAS_LARGE_FILESYSTEM := true
+
+          BOARD_FLASH_BLOCK_SIZE := 262144
+
+          BOARD_SUPER_PARTITION_SIZE := 9126805504
+          BOARD_SUPER_PARTITION_GROUPS := moto_dynamic_partitions
+          BOARD_MOTO_DYNAMIC_PARTITIONS_SIZE := 9122611200
+          BOARD_MOTO_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor product odm system_ext
+
+          TARGET_COPY_OUT_VENDOR := vendor
+          TARGET_COPY_OUT_PRODUCT := product
+          TARGET_COPY_OUT_SYSTEM_EXT := system_ext
+
+          BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
+          BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
+          BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
+          BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
+
+          TARGET_USERIMAGES_USE_EXT4 := true
+          TARGET_USERIMAGES_USE_F2FS := true
+
+          TARGET_RECOVERY_FSTAB := \$(DEVICE_PATH)/recovery.fstab
+
+          RECOVERY_SDCARD_ON_DATA := true
+          BOARD_HAS_NO_SELECT_BUTTON := true
+
+          TW_THEME := portrait_hdpi
+          TW_EXTRA_LANGUAGES := true
+          TW_USE_TOOLBOX := true
+          TW_HAS_MTP := true
+          TW_INCLUDE_FASTBOOTD := true
+          TW_INCLUDE_CRYPTO := true
+          TW_INCLUDE_NTFS := true
+          TW_INCLUDE_REPACKTOOLS := true
+
+          TW_INCLUDE_RECOVERY_FSTAB := true
+          TW_EXCLUDE_DEFAULT_USB_INIT := true
+          EOF
+
+      - name: Patch device.mk
+        run: |
+          cd twrp
+
+          cat > device/motorola/devonf/device.mk <<EOF
+          PRODUCT_PACKAGES += \
+              twrp \
+              libtar \
+              toolbox
+          EOF
+
+      - name: Build
+        run: |
+          cd twrp
+          source build/envsetup.sh
+
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
+          export TARGET_BUILD_APPS=""
+          export SKIP_ABI_CHECKS=true
+          export TARGET_NO_TESTS=true
+          export SKIP_CTS_TESTS=true
+          export BUILD_BROKEN_DUP_RULES=true
+          export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
+
+          lunch omni_devonf-eng
+
+          make clean
+
+          echo "=== BUILD BOOTIMAGE ==="
+          mka bootimage -j4 || true
+
+          echo "=== BUILD VENDOR_BOOT ==="
+          mka vendorbootimage -j4 || true
+
+          echo "=== BUILD DTBO ==="
+          mka dtboimage -j4 || true
+
+          echo "=== TODOS OS ARQUIVOS ==="
+          find out/target/product/devonf/ -type f
+
+          echo "=== IMAGENS ==="
+          find out/target/product/devonf/ -name "*.img"
+
+      - name: Prepare upload
+        run: |
+          mkdir -p upload
+
+          find twrp/out/target/product/devonf/ \
+            -name "*.img" \
+            -exec cp {} upload/ \;
+
+          ls -lah upload/
+
+          test "$(ls -A upload)" || exit 1
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: twrp-devonf
+          path: upload/*
