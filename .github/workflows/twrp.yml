@@ -78,70 +78,41 @@ jobs:
           --no-tags \
           -j4
 
-      - name: Patch BoardConfig
+      - name: Fix device tree
         run: |
           cd twrp
 
-          cat > device/motorola/devonf/BoardConfig.mk <<EOF
-          DEVICE_PATH := device/motorola/devonf
+          echo "=== PATCHING BOARDCONFIG ==="
 
-          TARGET_ARCH := arm64
-          TARGET_ARCH_VARIANT := armv8-a
-          TARGET_CPU_ABI := arm64-v8a
+          sed -i '/BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT/d' device/motorola/devonf/BoardConfig.mk
+          sed -i '/TARGET_COPY_OUT_PRODUCT/d' device/motorola/devonf/BoardConfig.mk
+          sed -i '/TARGET_COPY_OUT_SYSTEM_EXT/d' device/motorola/devonf/BoardConfig.mk
+          sed -i '/BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE/d' device/motorola/devonf/BoardConfig.mk
+          sed -i '/BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE/d' device/motorola/devonf/BoardConfig.mk
+          sed -i '/TARGET_NO_RECOVERY/d' device/motorola/devonf/BoardConfig.mk
+          sed -i '/TARGET_NO_KERNEL/d' device/motorola/devonf/BoardConfig.mk
 
-          TARGET_2ND_ARCH := arm
-          TARGET_2ND_ARCH_VARIANT := armv8-a
-          TARGET_2ND_CPU_ABI := armeabi-v7a
+          cat >> device/motorola/devonf/BoardConfig.mk <<EOF
 
-          TARGET_BOARD_PLATFORM := mt6855
-
-          TARGET_NO_BOOTLOADER := true
-          TARGET_NO_RADIOIMAGE := true
           TARGET_NO_KERNEL := false
           TARGET_NO_RECOVERY := true
 
-          TARGET_SUPPORTS_64_BIT_APPS := true
-          TARGET_USES_64_BIT_BINDER := true
-
-          BOARD_BOOTIMG_HEADER_VERSION := 4
-
-          BOARD_KERNEL_BASE := 0x40078000
-          BOARD_KERNEL_PAGESIZE := 4096
-          BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
-          BOARD_KERNEL_CMDLINE := androidboot.hardware=mt6855
-
-          TARGET_PREBUILT_KERNEL := \$(DEVICE_PATH)/prebuilt/kernel
-
           BOARD_USES_RECOVERY_AS_BOOT := true
-          BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := true
+
+          TARGET_RECOVERY_FSTAB := device/motorola/devonf/recovery.fstab
 
           BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
           BOARD_SUPPRESS_SECURE_ERASE := true
           BOARD_HAS_LARGE_FILESYSTEM := true
 
-          BOARD_FLASH_BLOCK_SIZE := 262144
-
-          BOARD_SUPER_PARTITION_SIZE := 9126805504
-          BOARD_SUPER_PARTITION_GROUPS := moto_dynamic_partitions
-          BOARD_MOTO_DYNAMIC_PARTITIONS_SIZE := 9122611200
-          BOARD_MOTO_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor product odm system_ext
-
           TARGET_COPY_OUT_VENDOR := vendor
-          TARGET_COPY_OUT_PRODUCT := product
-          TARGET_COPY_OUT_SYSTEM_EXT := system_ext
 
-          BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
-          BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
           BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
-          BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
-
-          TARGET_USERIMAGES_USE_EXT4 := true
-          TARGET_USERIMAGES_USE_F2FS := true
-
-          TARGET_RECOVERY_FSTAB := \$(DEVICE_PATH)/recovery.fstab
+          BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
 
           RECOVERY_SDCARD_ON_DATA := true
           BOARD_HAS_NO_SELECT_BUTTON := true
+          TARGET_USERIMAGES_USE_EXT4 := true
 
           TW_THEME := portrait_hdpi
           TW_EXTRA_LANGUAGES := true
@@ -151,21 +122,16 @@ jobs:
           TW_INCLUDE_CRYPTO := true
           TW_INCLUDE_NTFS := true
           TW_INCLUDE_REPACKTOOLS := true
-
           TW_INCLUDE_RECOVERY_FSTAB := true
-          TW_EXCLUDE_DEFAULT_USB_INIT := true
           EOF
 
-      - name: Patch device.mk
-        run: |
-          cd twrp
+          echo "=== PATCHING DEVICE.MK ==="
 
-          cat > device/motorola/devonf/device.mk <<EOF
-          PRODUCT_PACKAGES += \
-              twrp \
-              libtar \
-              toolbox
-          EOF
+          if ! grep -q "twrp" device/motorola/devonf/device.mk; then
+            echo "" >> device/motorola/devonf/device.mk
+            echo "PRODUCT_PACKAGES += \\" >> device/motorola/devonf/device.mk
+            echo "    twrp" >> device/motorola/devonf/device.mk
+          fi
 
       - name: Build
         run: |
@@ -174,10 +140,6 @@ jobs:
 
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-          export TARGET_BUILD_APPS=""
-          export SKIP_ABI_CHECKS=true
-          export TARGET_NO_TESTS=true
-          export SKIP_CTS_TESTS=true
           export BUILD_BROKEN_DUP_RULES=true
           export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
 
@@ -185,19 +147,9 @@ jobs:
 
           make clean
 
-          echo "=== BUILD BOOTIMAGE ==="
-          mka bootimage -j4 || true
+          mka bootimage -j4
 
-          echo "=== BUILD VENDOR_BOOT ==="
-          mka vendorbootimage -j4 || true
-
-          echo "=== BUILD DTBO ==="
-          mka dtboimage -j4 || true
-
-          echo "=== TODOS OS ARQUIVOS ==="
-          find out/target/product/devonf/ -type f
-
-          echo "=== IMAGENS ==="
+          echo "=== IMAGENS GERADAS ==="
           find out/target/product/devonf/ -name "*.img"
 
       - name: Prepare upload
@@ -208,9 +160,14 @@ jobs:
           -name "*.img" \
           -exec cp {} upload/ \;
 
-          ls -lah upload/
+          echo "=== ARQUIVOS PARA UPLOAD ==="
+          ls -lah upload/ || true
 
-          test "$(ls -A upload)" || exit 1
+          if [ -z "$(ls -A upload 2>/dev/null)" ]; then
+            echo "ERRO: Nenhuma imagem gerada!"
+            find twrp/out/target/product/devonf/ -type f
+            exit 1
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
