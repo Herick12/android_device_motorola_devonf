@@ -126,20 +126,20 @@ jobs:
 
           lunch omni_devonf-eng
           
-          # Removido o make clean para permitir que o sistema identifique as dependências
-          # Comando bootimage é o correto para dispositivos Recovery-as-Boot
-          mka bootimage -j4
+          # Tentamos compilar apenas o bootimage, que no Recovery-as-Boot 
+          # deve conter o TWRP. Se falhar, forçamos o ramdisk.
+          mka bootimage -j4 || mka ramdisk -j4 && mka bootimage -j4
 
       - name: Prepare files
         run: |
           mkdir -p upload
-          # Copia todos os arquivos .img encontrados para garantir que o boot.img seja capturado
+          # Buscamos por qualquer imagem .img, pois o arquivo pode ser boot.img ou recovery.img
           find twrp/out/target/product/devonf -name "*.img" -exec cp {} upload/ \;
           ls -lah upload
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: twrp-devonf-final
+          name: twrp-devonf-build
           path: upload/*
           
