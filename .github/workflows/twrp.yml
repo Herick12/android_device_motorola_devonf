@@ -43,68 +43,73 @@ jobs:
         run: |
           mkdir twrp
           cd twrp
-
-          repo init \
-            -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git \
-            -b twrp-12.1 \
-            --depth=1
+          repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1 --depth=1
 
       - name: Add local manifest
         run: |
           mkdir -p twrp/.repo/local_manifests
-
           cat > twrp/.repo/local_manifests/roomservice.xml <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <manifest>
-            <project
-              name="Herick12/android_device_motorola_devonf"
-              path="device/motorola/devonf"
-              remote="github"
-              revision="main" />
+            <project name="Herick12/android_device_motorola_devonf" path="device/motorola/devonf" remote="github" revision="main" />
           </manifest>
           EOF
 
       - name: Repo sync
         run: |
           cd twrp
-
-          repo sync \
-            -c \
-            --force-sync \
-            --optimized-fetch \
-            --no-clone-bundle \
-            --no-tags \
-            --prune \
-            -j2
+          repo sync -c --force-sync --optimized-fetch --no-clone-bundle --no-tags --prune -j2
 
       - name: Patch BoardConfig
         run: |
-          # Verifica se o arquivo existe antes de aplicar o sed
           CONFIG_FILE="twrp/device/motorola/devonf/BoardConfig.mk"
           if [ -f "$CONFIG_FILE" ]; then
             sed -i '/BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT/d' "$CONFIG_FILE"
-            
             cat >> "$CONFIG_FILE" <<EOF
 
           TARGET_NO_KERNEL := false
           TARGET_NO_RECOVERY := false
-
           BOARD_USES_RECOVERY_AS_BOOT := true
-
           TARGET_RECOVERY_FSTAB := device/motorola/devonf/recovery.fstab
-
           BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
           BOARD_SUPPRESS_SECURE_ERASE := true
           BOARD_HAS_LARGE_FILESYSTEM := true
-
           TARGET_COPY_OUT_VENDOR := vendor
           TARGET_COPY_OUT_PRODUCT := product
           TARGET_COPY_OUT_SYSTEM_EXT := system_ext
-
           BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
           BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
           BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
-
           RECOVERY_SDCARD_ON_DATA := true
-          BOARD_HAS_NO_SELECT
+          BOARD_HAS_NO_SELECT_BUTTON := true
+          TARGET_USERIMAGES_USE_EXT4 := true
+          EOF
+          else
+            echo "Erro: $CONFIG_FILE não encontrado!"
+            exit 1
+          fi
+
+      - name: Build TWRP
+        run: |
+          cd twrp
+          source build/envsetup.sh
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
+          export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
+          export BUILD_BROKEN_DUP_RULES=true
+          lunch omni_devonf-eng
+          make clean
+          mka bootimage -j2
+
+      - name: Prepare files
+        run: |
+          mkdir -p upload
+          find twrp/out/target/product/devonf -name "*.img" -exec cp {} upload/ \;
+          ls -lah upload
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: twrp-devonf
+          path: upload/*
           
