@@ -38,7 +38,7 @@ jobs:
           touch out/target/product/devonf/root/init.recovery.mt6855.rc
           
           echo '#!/bin/bash' > mkbootimg_wrapper.sh
-          echo 'out/host/linux-x86/bin/mkbootimg "${@/--recovery_dtbo/}"' >> mkbootimg_wrapper.sh
+          echo 'out/host/linux-x86/bin/mkbootimg "${@//--vendor_ramdisk_fragment recovery/}"' >> mkbootimg_wrapper.sh
           chmod +x mkbootimg_wrapper.sh
           mkdir -p bin_override
           ln -s ../mkbootimg_wrapper.sh bin_override/mkbootimg
@@ -49,7 +49,6 @@ jobs:
           
           mka clean
           mka bootimage vendorbootimage BOARD_MKBOOTIMG_ARGS="--header_version 4" -j$(nproc)
-          
 
       - name: Upload
         uses: actions/upload-artifact@v4
