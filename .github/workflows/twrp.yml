@@ -33,13 +33,6 @@ jobs:
           source build/envsetup.sh
           lunch omni_devonf-eng
           
-          echo '#!/bin/bash' > mkbootimg_wrapper.sh
-          echo 'out/host/linux-x86/bin/mkbootimg "${@//--vendor_ramdisk_fragment recovery/}"' >> mkbootimg_wrapper.sh
-          chmod +x mkbootimg_wrapper.sh
-          mkdir -p bin_override
-          ln -s ../mkbootimg_wrapper.sh bin_override/mkbootimg
-          export PATH=$PWD/bin_override:$PATH
-          
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
