@@ -17,6 +17,10 @@ BOARD_KERNEL_CMDLINE := androidboot.hardware=mt6855 androidboot.selinux=permissi
 
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 
+# Declaração explicita para satisfazer o check do board_config.mk
+BOARD_BUILD_VENDOR_BOOT_IMAGE := true
+BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := true
+BOARD_USES_RECOVERY_AS_BOOT := false
 BOARD_INCLUDE_RECOVERY_DTBO := true
 
 BOARD_BOOTIMAGE_PARTITION_SIZE := 134217728
@@ -56,4 +60,3 @@ TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
 
 ALLOW_MISSING_DEPENDENCIES := true
 BUILD_BROKEN_MISSING_REQUIRED_MODULES := true
-
