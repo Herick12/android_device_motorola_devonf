@@ -6,21 +6,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Free huge disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost /usr/share/swift /usr/lib/jvm /opt/hostedtoolcache
-          sudo docker system prune -af || true
-          sudo apt clean && sudo swapoff -a || true
-
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y git curl zip unzip ccache automake lzop bison gperf build-essential zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 x11proto-dev libx11-dev libgl1-mesa-dev libxml2-utils xsltproc openjdk-11-jdk python3 rsync libncurses-dev bc flex libssl-dev repo
+          sudo apt install -y git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc unzip python3 rsync repo
 
       - name: Init and Sync
         run: |
@@ -32,33 +25,20 @@ jobs:
             <project name="Herick12/android_device_motorola_devonf" path="device/motorola/devonf" remote="github" revision="main" />
           </manifest>
           EOF
-          repo sync -c --force-sync --optimized-fetch --no-clone-bundle --no-tags --prune -j4
-
-      - name: Patch BoardConfig
-        run: |
-          CONFIG_FILE="twrp/device/motorola/devonf/BoardConfig.mk"
-          # Removida a flag --recovery_dtbo problemática
-          cat >> "$CONFIG_FILE" <<EOF
-
-          BOARD_BOOTIMAGE_PARTITION_SIZE := 134217728
-          BOARD_USES_RECOVERY_AS_BOOT := true
-          TARGET_NO_RECOVERY := true
-          EOF
+          repo sync -c --force-sync --optimized-fetch --no-clone-bundle --no-tags --prune -j$(nproc)
 
       - name: Build TWRP
         run: |
           cd twrp
           source build/envsetup.sh
-          
-          # Criar pasta para evitar o erro do rsync
-          mkdir -p out/target/product/devonf/root
-          touch out/target/product/devonf/root/init.rc
+          # Limpeza de builds anteriores
+          mka clean
           
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           lunch omni_devonf-eng
-          mka bootimage -j4
+          mka bootimage -j$(nproc)
 
       - name: Upload
         uses: actions/upload-artifact@v4
