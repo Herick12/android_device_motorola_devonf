@@ -1,4 +1,5 @@
 /dev/block/by-name/boot /boot emmc defaults slotselect
+/dev/block/by-name/vendor_boot /vendor_boot emmc defaults slotselect
 /dev/block/by-name/dtbo /dtbo emmc defaults slotselect
 /dev/block/by-name/vbmeta /vbmeta emmc defaults slotselect
 system /system erofs ro wait,slotselect,logical,first_stage_mount
@@ -9,4 +10,3 @@ product /product erofs ro wait,slotselect,logical,first_stage_mount
 /dev/block/by-name/metadata /metadata ext4 noatime,nosuid,nodev,discard wait,check,formattable
 /devices/platform/soc/11240000.mmc* auto auto defaults voldmanaged=sdcard1:auto
 /devices/platform/soc/mt_usb* auto vfat defaults voldmanaged=usbotg:auto
-
