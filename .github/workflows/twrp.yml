@@ -37,10 +37,11 @@ jobs:
       - name: Patch BoardConfig
         run: |
           CONFIG_FILE="twrp/device/motorola/devonf/BoardConfig.mk"
+          # Removida a flag --recovery_dtbo problemática
           cat >> "$CONFIG_FILE" <<EOF
+
           BOARD_BOOTIMAGE_PARTITION_SIZE := 134217728
           BOARD_USES_RECOVERY_AS_BOOT := true
-          BOARD_INCLUDE_RECOVERY_DTBO := true
           TARGET_NO_RECOVERY := true
           EOF
 
@@ -49,7 +50,7 @@ jobs:
           cd twrp
           source build/envsetup.sh
           
-          # CRÍTICO: Criar a estrutura que o rsync procura manualmente
+          # Criar pasta para evitar o erro do rsync
           mkdir -p out/target/product/devonf/root
           touch out/target/product/devonf/root/init.rc
           
