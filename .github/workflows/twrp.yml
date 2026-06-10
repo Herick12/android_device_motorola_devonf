@@ -32,17 +32,23 @@ jobs:
           cd twrp
           source build/envsetup.sh
           mka clean
-          
           mkdir -p out/target/product/devonf/root
           touch out/target/product/devonf/root/init
           touch out/target/product/devonf/root/init.recovery.mt6855.rc
+          
+          # Wrapper para remover a flag problemática do mkbootimg
+          echo '#!/bin/bash' > mkbootimg_wrapper.sh
+          echo 'out/host/linux-x86/bin/mkbootimg "${@/--recovery_dtbo/}"' >> mkbootimg_wrapper.sh
+          chmod +x mkbootimg_wrapper.sh
+          mkdir -p bin_override
+          ln -s ../mkbootimg_wrapper.sh bin_override/mkbootimg
+          export PATH=$PWD/bin_override:$PATH
           
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           lunch omni_devonf-eng
-          # Adicionada a flag SKIP_RECOVERY_DTBO=true
-          mka bootimage BOARD_MKBOOTIMG_ARGS="--header_version 4" SKIP_RECOVERY_DTBO=true -j$(nproc)
+          mka bootimage BOARD_MKBOOTIMG_ARGS="--header_version 4" -j$(nproc)
 
       - name: Upload
         uses: actions/upload-artifact@v4
