@@ -17,16 +17,13 @@ BOARD_KERNEL_CMDLINE := androidboot.hardware=mt6855 androidboot.selinux=permissi
 
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 
-# Forçar a estrutura de vendor_boot e desativar o modo antigo
 BOARD_USES_RECOVERY_AS_BOOT := false
 BOARD_BUILD_VENDOR_BOOT_IMAGE := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
 
-# Tamanhos definidos
 BOARD_BOOTIMAGE_PARTITION_SIZE := 134217728
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 67108864
 
-# Configurações de partição
 BOARD_SUPER_PARTITION_SIZE := 9126805504
 BOARD_SUPER_PARTITION_PARTITION_LIST := system system_ext vendor product
 TARGET_USERIMAGES_USE_F2FS := true
@@ -47,7 +44,6 @@ TARGET_NO_KERNEL := false
 TARGET_SUPPORTS_64_BIT_APPS := true
 TARGET_USES_64_BIT_BINDER := true
 
-# Configurações TWRP
 TW_THEME := portrait_hdpi
 TW_EXTRA_LANGUAGES := true
 TW_USE_TOOLBOX := true
@@ -60,3 +56,5 @@ TW_INCLUDE_RECOVERY_FSTAB := true
 TW_EXCLUDE_DEFAULT_USB_INIT := true
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
 
+ALLOW_MISSING_DEPENDENCIES := true
+BUILD_BROKEN_MISSING_REQUIRED_MODULES := true
