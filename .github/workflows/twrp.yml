@@ -65,14 +65,7 @@ jobs:
       - name: Repo sync
         run: |
           cd twrp
-          repo sync \
-            -c \
-            --force-sync \
-            --optimized-fetch \
-            --no-clone-bundle \
-            --no-tags \
-            --prune \
-            -j2
+          repo sync -c --force-sync --optimized-fetch --no-clone-bundle --no-tags --prune -j2
 
       - name: Patch BoardConfig
         run: |
@@ -83,57 +76,47 @@ jobs:
 
           TARGET_NO_KERNEL := false
           TARGET_NO_RECOVERY := false
-
           BOARD_USES_RECOVERY_AS_BOOT := true
-
           TARGET_RECOVERY_FSTAB := device/motorola/devonf/recovery.fstab
-
           BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
           BOARD_SUPPRESS_SECURE_ERASE := true
           BOARD_HAS_LARGE_FILESYSTEM := true
-
           TARGET_COPY_OUT_VENDOR := vendor
           TARGET_COPY_OUT_PRODUCT := product
           TARGET_COPY_OUT_SYSTEM_EXT := system_ext
-
           BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
           BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
           BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
-
           RECOVERY_SDCARD_ON_DATA := true
           BOARD_HAS_NO_SELECT_BUTTON := true
           TARGET_USERIMAGES_USE_EXT4 := true
           EOF
-          else
-            echo "Erro: $CONFIG_FILE não encontrado!"
-            exit 1
           fi
 
       - name: Build TWRP
         run: |
           cd twrp
           source build/envsetup.sh
-
+          
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
           export BUILD_BROKEN_DUP_RULES=true
           export BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES=true
-          export TARGET_BUILD_APPS=""
-          export SKIP_ABI_CHECKS=true
-          export TARGET_NO_TESTS=true
-          export SKIP_CTS_TESTS=true
-
+          
           lunch omni_devonf-eng
           
-          # Tentamos compilar apenas o bootimage, que no Recovery-as-Boot 
-          # deve conter o TWRP. Se falhar, forçamos o ramdisk.
-          mka bootimage -j4 || mka ramdisk -j4 && mka bootimage -j4
+          # FORÇA A CRIAÇÃO DE UMA ESTRUTURA ROOT MÍNIMA PARA EVITAR O ERRO DO RSYNC
+          mkdir -p out/target/product/devonf/root/system/bin
+          mkdir -p out/target/product/devonf/root/sbin
+          touch out/target/product/devonf/root/init
+          
+          # Compila o bootimage, que é onde o TWRP será injetado
+          mka bootimage -j2
 
       - name: Prepare files
         run: |
           mkdir -p upload
-          # Buscamos por qualquer imagem .img, pois o arquivo pode ser boot.img ou recovery.img
           find twrp/out/target/product/devonf -name "*.img" -exec cp {} upload/ \;
           ls -lah upload
 
