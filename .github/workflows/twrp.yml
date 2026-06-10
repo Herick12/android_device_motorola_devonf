@@ -1,4 +1,4 @@
-Name: Build TWRP Devonf Final
+name: Build TWRP Devonf Final
 
 on: workflow_dispatch
 
@@ -54,6 +54,5 @@ jobs:
         with:
           name: twrp-devonf-fixed
           path: |
-            twrp/out/target/product/devonf/boot.img
-            twrp/out/target/product/devonf/vendor_boot.img
+            twrp/out/target/product/devonf/*.img
             
