@@ -37,9 +37,7 @@ jobs:
       - name: Patch BoardConfig
         run: |
           CONFIG_FILE="twrp/device/motorola/devonf/BoardConfig.mk"
-          # Adição explícita do tamanho da partição e flags de Recovery-as-Boot
           cat >> "$CONFIG_FILE" <<EOF
-
           BOARD_BOOTIMAGE_PARTITION_SIZE := 134217728
           BOARD_USES_RECOVERY_AS_BOOT := true
           BOARD_INCLUDE_RECOVERY_DTBO := true
@@ -51,25 +49,19 @@ jobs:
           cd twrp
           source build/envsetup.sh
           
-          # Variáveis para evitar erros comuns de compilação
+          # CRÍTICO: Criar a estrutura que o rsync procura manualmente
+          mkdir -p out/target/product/devonf/root
+          touch out/target/product/devonf/root/init.rc
+          
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           lunch omni_devonf-eng
-          
-          # Comando para gerar a imagem de boot (recovery)
           mka bootimage -j4
-
-      - name: Prepare and Upload
-        run: |
-          mkdir -p upload
-          # Copia a imagem resultante
-          cp twrp/out/target/product/devonf/boot.img upload/
-          ls -lah upload
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: twrp-devonf-fixed
-          path: upload/*
+          path: twrp/out/target/product/devonf/boot.img
           
