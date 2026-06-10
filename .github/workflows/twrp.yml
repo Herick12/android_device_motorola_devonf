@@ -48,7 +48,8 @@ jobs:
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           mka clean
-          mka bootimage vendor_bootimage BOARD_MKBOOTIMG_ARGS="--header_version 4" -j$(nproc)
+          mka bootimage vendorbootimage BOARD_MKBOOTIMG_ARGS="--header_version 4" -j$(nproc)
+          
 
       - name: Upload
         uses: actions/upload-artifact@v4
