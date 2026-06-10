@@ -33,10 +33,7 @@ jobs:
           source build/envsetup.sh
           lunch omni_devonf-eng
           
-          mkdir -p out/target/product/devonf/root
-          touch out/target/product/devonf/root/init
-          touch out/target/product/devonf/root/init.recovery.mt6855.rc
-          
+          # Wrapper para remover flags que o mkbootimg antigo recusa
           echo '#!/bin/bash' > mkbootimg_wrapper.sh
           echo 'out/host/linux-x86/bin/mkbootimg "${@//--vendor_ramdisk_fragment recovery/}"' >> mkbootimg_wrapper.sh
           chmod +x mkbootimg_wrapper.sh
