@@ -37,7 +37,8 @@ jobs:
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           mka clean
-          mka bootimage vendorbootimage -j$(nproc)
+          mka bootimage
+          mka vendorbootimage
           
           echo "Listagem final de arquivos gerados:"
           find out/target/product/devonf/ -name "*.img"
