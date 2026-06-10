@@ -22,12 +22,10 @@ BOARD_KERNEL_CMDLINE := androidboot.hardware=mt6855 androidboot.selinux=permissi
 
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 
-# Configuração crítica para boot em aparelhos A/B
 BOARD_USES_RECOVERY_AS_BOOT := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
 BOARD_BOOTIMAGE_PARTITION_SIZE := 134217728
 
-# Configuração de Partições (EROFs e F2FS)
 BOARD_SUPER_PARTITION_SIZE := 9126805504
 BOARD_SUPER_PARTITION_PARTITION_LIST := system system_ext vendor product
 TARGET_USERIMAGES_USE_F2FS := true
@@ -39,7 +37,6 @@ BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := erofs
 
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
 
-# TWRP Settings
 TW_THEME := portrait_hdpi
 TW_EXTRA_LANGUAGES := true
 TW_USE_TOOLBOX := true
