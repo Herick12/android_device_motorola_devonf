@@ -9,6 +9,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses-dev x11proto-core-dev libx11-dev lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc unzip python3 rsync
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
+
       - name: Init and Sync
         run: |
           mkdir twrp && cd twrp
@@ -24,19 +33,19 @@ jobs:
       - name: Build TWRP
         run: |
           cd twrp
-          # Definimos as variáveis ANTES do envsetup para evitar o erro de validação
           export BOARD_BUILD_VENDOR_BOOT_IMAGE=true
           export BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true
           export BOARD_USES_RECOVERY_AS_BOOT=false
-          
-          source build/envsetup.sh
-          lunch omni_devonf-eng
-          
           export ALLOW_MISSING_DEPENDENCIES=true
           export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
+          source build/envsetup.sh
+          lunch omni_devonf-eng
+          
+          rm -rf out/soong/
           mka clean
+          
           mka vendorbootimage bootimage -j$(nproc)
           
           find out/target/product/devonf/ -name "*.img"
