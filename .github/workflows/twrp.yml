@@ -31,7 +31,8 @@ jobs:
         run: |
           cd twrp
           source build/envsetup.sh
-          mka clean
+          lunch omni_devonf-eng
+          
           mkdir -p out/target/product/devonf/root
           touch out/target/product/devonf/root/init
           touch out/target/product/devonf/root/init.recovery.mt6855.rc
@@ -46,7 +47,7 @@ jobs:
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
-          lunch omni_devonf-eng
+          mka clean
           mka bootimage vendor_bootimage BOARD_MKBOOTIMG_ARGS="--header_version 4" -j$(nproc)
 
       - name: Upload
