@@ -14,10 +14,6 @@ TARGET_NO_RADIOIMAGE := true
 TARGET_NO_RECOVERY := false
 TARGET_NO_KERNEL := false
 
-TARGET_SUPPORTS_64_BIT_APPS := true
-TARGET_USES_64_BIT_BINDER := true
-
-# Configurações de Boot e Kernel
 BOARD_BOOTIMG_HEADER_VERSION := 4
 BOARD_KERNEL_BASE := 0x40078000
 BOARD_KERNEL_PAGESIZE := 4096
@@ -26,17 +22,14 @@ BOARD_KERNEL_CMDLINE := androidboot.hardware=mt6855 androidboot.selinux=permissi
 
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 
-# Importante para dispositivos A/B modernos
+# Configuração crítica para boot em aparelhos A/B
 BOARD_USES_RECOVERY_AS_BOOT := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
+BOARD_BOOTIMAGE_PARTITION_SIZE := 134217728
 
-# Partições Dinâmicas
+# Configuração de Partições (EROFs e F2FS)
 BOARD_SUPER_PARTITION_SIZE := 9126805504
 BOARD_SUPER_PARTITION_PARTITION_LIST := system system_ext vendor product
-BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
-BOARD_SUPPRESS_SECURE_ERASE := true
-
-# Sistemas de arquivos (Corrigido para EROFS e F2FS)
 TARGET_USERIMAGES_USE_F2FS := true
 BOARD_USERDATAIMAGE_FILE_SYSTEM_TYPE := f2fs
 BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := erofs
@@ -46,7 +39,7 @@ BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := erofs
 
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
 
-# Configurações do TWRP
+# TWRP Settings
 TW_THEME := portrait_hdpi
 TW_EXTRA_LANGUAGES := true
 TW_USE_TOOLBOX := true
