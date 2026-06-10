@@ -19,7 +19,6 @@ jobs:
           mkdir twrp && cd twrp
           repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1 --depth=1
           mkdir -p .repo/local_manifests
-          # Garante que a pasta existe antes de colocar o arquivo
           mkdir -p device/motorola/devonf
           cat > .repo/local_manifests/roomservice.xml <<EOF
           <manifest>
@@ -32,16 +31,17 @@ jobs:
         run: |
           cd twrp
           source build/envsetup.sh
-          # Tenta o lunch explicitamente
           lunch omni_devonf-eng
           
-          export ALLOW_MISSING_DEPENDENCIES=true
-          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
+          # Força a geração via variáveis de ambiente
+          export BOARD_BUILD_VENDOR_BOOT_IMAGE=true
           
           mka clean
-          mka bootimage vendorbootimage -j$(nproc)
+          mka vendorbootimage
+          mka bootimage
           
-          find out/target/product/devonf/ -name "*.img"
+          echo "Arquivos gerados:"
+          ls -lh out/target/product/devonf/
 
       - name: Upload
         uses: actions/upload-artifact@v4
