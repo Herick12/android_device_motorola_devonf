@@ -33,7 +33,6 @@ jobs:
           source build/envsetup.sh
           lunch omni_devonf-eng
           
-          # Wrapper para filtrar flag incompatível do mkbootimg
           echo '#!/bin/bash' > mkbootimg_wrapper.sh
           echo 'out/host/linux-x86/bin/mkbootimg "${@//--vendor_ramdisk_fragment recovery/}"' >> mkbootimg_wrapper.sh
           chmod +x mkbootimg_wrapper.sh
@@ -47,15 +46,13 @@ jobs:
           mka clean
           mka bootimage vendorbootimage -j$(nproc)
           
-          # Depuração: verificar onde os arquivos foram gerados
-          echo "Verificando arquivos gerados em out/target/product/:"
-          find out/target/product/ -name "*.img"
+          echo "Listagem final de arquivos gerados:"
+          find out/target/product/devonf/ -name "*.img"
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: twrp-devonf-completo
+          name: twrp-devonf-final-vendor
           path: |
             twrp/out/target/product/devonf/*.img
-            twrp/out/target/product/*/vendor_boot.img
             
