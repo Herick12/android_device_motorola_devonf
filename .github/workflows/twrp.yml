@@ -1,4 +1,4 @@
-name: Build TWRP Devonf Final
+Name: Build TWRP Devonf Final
 
 on: workflow_dispatch
 
@@ -36,7 +36,6 @@ jobs:
           touch out/target/product/devonf/root/init
           touch out/target/product/devonf/root/init.recovery.mt6855.rc
           
-          # Wrapper para remover a flag problemática do mkbootimg
           echo '#!/bin/bash' > mkbootimg_wrapper.sh
           echo 'out/host/linux-x86/bin/mkbootimg "${@/--recovery_dtbo/}"' >> mkbootimg_wrapper.sh
           chmod +x mkbootimg_wrapper.sh
@@ -48,11 +47,13 @@ jobs:
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           lunch omni_devonf-eng
-          mka bootimage BOARD_MKBOOTIMG_ARGS="--header_version 4" -j$(nproc)
+          mka bootimage vendor_bootimage BOARD_MKBOOTIMG_ARGS="--header_version 4" -j$(nproc)
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: twrp-devonf-fixed
-          path: twrp/out/target/product/devonf/boot.img
-          
+          path: |
+            twrp/out/target/product/devonf/boot.img
+            twrp/out/target/product/devonf/vendor_boot.img
+            
