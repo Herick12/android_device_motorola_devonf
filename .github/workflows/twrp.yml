@@ -18,16 +18,13 @@ jobs:
         run: |
           mkdir twrp && cd twrp
           repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1 --depth=1
-          
           mkdir -p .repo/local_manifests
           mkdir -p device/motorola/devonf
-          
           cat > .repo/local_manifests/roomservice.xml <<EOF
           <manifest>
             <project name="Herick12/android_device_motorola_devonf" path="device/motorola/devonf" remote="github" revision="main" />
           </manifest>
           EOF
-          
           repo sync -c --force-sync --optimized-fetch --no-clone-bundle --no-tags --prune -j$(nproc)
 
       - name: Build TWRP
@@ -36,7 +33,6 @@ jobs:
           source build/envsetup.sh
           mka clean
           
-          # Correção: Criar estrutura necessária para o rsync não falhar
           mkdir -p out/target/product/devonf/root
           touch out/target/product/devonf/root/init
           touch out/target/product/devonf/root/init.recovery.mt6855.rc
@@ -45,7 +41,7 @@ jobs:
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           lunch omni_devonf-eng
-          mka bootimage -j$(nproc)
+          mka bootimage BOARD_MKBOOTIMG_ARGS="--header_version 4" -j$(nproc)
 
       - name: Upload
         uses: actions/upload-artifact@v4
