@@ -19,7 +19,8 @@ jobs:
           mkdir twrp && cd twrp
           repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1 --depth=1
           
-          # Criação forçada do diretório para evitar "Device not found"
+          # Criar TODAS as pastas necessárias ANTES de criar o arquivo
+          mkdir -p .repo/local_manifests
           mkdir -p device/motorola/devonf
           
           cat > .repo/local_manifests/roomservice.xml <<EOF
