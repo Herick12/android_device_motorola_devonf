@@ -34,22 +34,17 @@ jobs:
       - name: Build TWRP
         run: |
           cd twrp
+          source build/envsetup.sh
+          lunch omni_devonf-eng
           
-          export BOARD_BUILD_VENDOR_BOOT_IMAGE=true
-          export BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true
-          export BOARD_USES_RECOVERY_AS_BOOT=false
           export ALLOW_MISSING_DEPENDENCIES=true
           export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
-          source build/envsetup.sh
-          lunch omni_devonf-eng
-          
           rm -rf out/soong/
           mka clean
           
-          mka vendorbootimage
-          mka bootimage
+          mka BOARD_BUILD_VENDOR_BOOT_IMAGE=true BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true BOARD_USES_RECOVERY_AS_BOOT=false vendorbootimage bootimage -j$(nproc)
           
           find out/target/product/devonf/ -name "*.img"
 
