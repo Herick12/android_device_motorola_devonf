@@ -44,14 +44,14 @@ jobs:
           rm -rf out/soong/
           mka clean
           
-          mka BOARD_BUILD_VENDOR_BOOT_IMAGE=true BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true BOARD_USES_RECOVERY_AS_BOOT=false vendorbootimage bootimage -j$(nproc)
+          mka recoveryimage -j4
           
           find out/target/product/devonf/ -name "*.img"
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: twrp-devonf-final-vendor
+          name: twrp-devonf-final
           path: |
             twrp/out/target/product/devonf/*.img
             
