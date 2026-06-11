@@ -36,7 +36,9 @@ jobs:
           cd twrp
           source build/envsetup.sh
           
-          export DEVICE_PATH=device/motorola/devonf
+          export BOARD_BUILD_VENDOR_BOOT_IMAGE=true
+          export BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true
+          
           lunch omni_devonf-eng
           
           export ALLOW_MISSING_DEPENDENCIES=true
@@ -44,9 +46,9 @@ jobs:
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           mka clean
-          mka vendorbootimage bootimage
+          mka bootimage vendorbootimage
           
-          find out/target/product/devonf/ -name "*.img"
+          find out/target/product/devonf/ -maxdepth 1 -name "*.img"
 
       - name: Upload
         uses: actions/upload-artifact@v4
