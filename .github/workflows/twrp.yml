@@ -34,6 +34,8 @@ jobs:
       - name: Build TWRP
         run: |
           cd twrp
+          sed -i '/BOARD_INCLUDE_RECOVERY_DTBO/d' device/motorola/devonf/BoardConfig.mk
+          sed -i '/BOARD_RECOVERY_DTBO/d' device/motorola/devonf/BoardConfig.mk
           source build/envsetup.sh
           export TARGET_PRODUCT=omni_devonf
           export ALLOW_MISSING_DEPENDENCIES=true
