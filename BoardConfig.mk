@@ -17,6 +17,12 @@ BOARD_KERNEL_CMDLINE := androidboot.hardware=mt6855 androidboot.selinux=permissi
 
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
 
+# Declaração em cascata para evitar o erro de validação
+BOARD_BUILD_VENDOR_BOOT_IMAGE := true
+TARGET_NO_KERNEL := false
+
+# Se o erro persistir, o sistema de build ignora variáveis que ele considera "incompatíveis"
+# O uso de BOARD_INCLUDE_RECOVERY_DTBO força o sistema a tratar vendor_boot como existente
 BOARD_INCLUDE_RECOVERY_DTBO := true
 
 BOARD_BOOTIMAGE_PARTITION_SIZE := 134217728
@@ -38,7 +44,6 @@ TARGET_COPY_OUT_SYSTEM_EXT := system_ext
 TARGET_NO_BOOTLOADER := true
 TARGET_NO_RADIOIMAGE := true
 TARGET_NO_RECOVERY := false
-TARGET_NO_KERNEL := false
 TARGET_SUPPORTS_64_BIT_APPS := true
 TARGET_USES_64_BIT_BINDER := true
 
