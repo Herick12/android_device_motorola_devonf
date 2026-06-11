@@ -41,14 +41,10 @@ jobs:
           export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
-          rm -rf out/soong/
           mka clean
+          mka bootimage vendor_bootimage
           
-          # Construção forçada do alvo recovery
-          mka recoveryimage -j$(nproc)
-          
-          # Verificação de arquivos para garantir que estão onde esperamos
-          echo "Verificando arquivos gerados:"
+          echo "Arquivos na pasta final:"
           ls -lh out/target/product/devonf/
 
       - name: Upload
@@ -57,5 +53,4 @@ jobs:
           name: twrp-devonf-final
           path: |
             twrp/out/target/product/devonf/*.img
-            twrp/out/target/product/devonf/recovery.img
             
