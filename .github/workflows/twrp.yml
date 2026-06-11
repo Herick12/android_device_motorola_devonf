@@ -44,9 +44,12 @@ jobs:
           rm -rf out/soong/
           mka clean
           
-          mka recoveryimage -j4
+          # Construção forçada do alvo recovery
+          mka recoveryimage -j$(nproc)
           
-          find out/target/product/devonf/ -name "*.img"
+          # Verificação de arquivos para garantir que estão onde esperamos
+          echo "Verificando arquivos gerados:"
+          ls -lh out/target/product/devonf/
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -54,4 +57,5 @@ jobs:
           name: twrp-devonf-final
           path: |
             twrp/out/target/product/devonf/*.img
+            twrp/out/target/product/devonf/recovery.img
             
