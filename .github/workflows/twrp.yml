@@ -41,7 +41,7 @@ jobs:
           export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           mka clean
-          BOARD_BUILD_VENDOR_BOOT_IMAGE=true BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true mka bootimage vendorbootimage
+          BOARD_BUILD_VENDOR_BOOT_IMAGE=true BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true mka vendorbootimage bootimage -j2
           find out/target/product/devonf/ -name "*.img"
 
       - name: Upload
