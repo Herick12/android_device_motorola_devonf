@@ -36,7 +36,6 @@ jobs:
           cd twrp
           source build/envsetup.sh
           
-          # Registro manual para garantir que o lunch funcione
           export DEVICE_PATH=device/motorola/devonf
           lunch omni_devonf-eng
           
@@ -45,7 +44,7 @@ jobs:
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           mka clean
-          mka vendor_bootimage bootimage
+          mka vendorbootimage bootimage
           
           find out/target/product/devonf/ -name "*.img"
 
