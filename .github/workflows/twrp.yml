@@ -34,8 +34,6 @@ jobs:
       - name: Build TWRP
         run: |
           cd twrp
-          export BOARD_BUILD_VENDOR_BOOT_IMAGE=true
-          export BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true
           source build/envsetup.sh
           lunch omni_devonf-eng
           
@@ -44,7 +42,7 @@ jobs:
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           
           mka clean
-          mka bootimage vendor_bootimage
+          mka vendor_bootimage bootimage
           
           find out/target/product/devonf/ -name "*.img"
 
