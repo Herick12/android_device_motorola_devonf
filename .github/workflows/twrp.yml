@@ -34,19 +34,14 @@ jobs:
       - name: Build TWRP
         run: |
           cd twrp
-          sed -i '/BOARD_INCLUDE_RECOVERY_DTBO/d' device/motorola/devonf/BoardConfig.mk
-          sed -i '/BOARD_RECOVERY_DTBO/d' device/motorola/devonf/BoardConfig.mk
           source build/envsetup.sh
           export TARGET_PRODUCT=omni_devonf
           export ALLOW_MISSING_DEPENDENCIES=true
           export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-          export BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE=ext4
-          export BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE=ext4
-          export BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE=ext4
           lunch omni_devonf-eng
           mka clean
-          BOARD_USES_RECOVERY_AS_BOOT=true BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=false BOARD_INCLUDE_RECOVERY_DTBO=false mka bootimage -j2
+          mka bootimage -j2
           find out/target/product/devonf/ -name "*.img"
 
       - name: Upload
@@ -55,5 +50,4 @@ jobs:
           name: twrp-devonf-final
           path: |
             twrp/out/target/product/devonf/boot.img
-            twrp/out/target/product/devonf/ramdisk.img
             
