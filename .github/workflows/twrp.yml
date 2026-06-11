@@ -34,6 +34,8 @@ jobs:
       - name: Build TWRP
         run: |
           cd twrp
+          export BOARD_BUILD_VENDOR_BOOT_IMAGE=true
+          export BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true
           source build/envsetup.sh
           lunch omni_devonf-eng
           
@@ -44,8 +46,7 @@ jobs:
           mka clean
           mka bootimage vendor_bootimage
           
-          echo "Arquivos na pasta final:"
-          ls -lh out/target/product/devonf/
+          find out/target/product/devonf/ -name "*.img"
 
       - name: Upload
         uses: actions/upload-artifact@v4
