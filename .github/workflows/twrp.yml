@@ -35,6 +35,9 @@ jobs:
         run: |
           cd twrp
           source build/envsetup.sh
+          
+          # Registro manual para garantir que o lunch funcione
+          export DEVICE_PATH=device/motorola/devonf
           lunch omni_devonf-eng
           
           export ALLOW_MISSING_DEPENDENCIES=true
