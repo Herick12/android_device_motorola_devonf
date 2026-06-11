@@ -44,7 +44,7 @@ jobs:
           export BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE=ext4
           lunch omni_devonf-eng
           mka clean
-          BOARD_USES_RECOVERY_AS_BOOT=true BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=false mka bootimage -j2
+          BOARD_USES_RECOVERY_AS_BOOT=true BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=false BOARD_INCLUDE_RECOVERY_DTBO=false mka bootimage -j2
           find out/target/product/devonf/ -name "*.img"
 
       - name: Upload
