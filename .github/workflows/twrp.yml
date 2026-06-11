@@ -35,25 +35,5 @@ jobs:
         run: |
           cd twrp
           source build/envsetup.sh
+          export TARGET_PRODUCT=omni_devonf
           
-          export BOARD_BUILD_VENDOR_BOOT_IMAGE=true
-          export BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT=true
-          
-          lunch omni_devonf-eng
-          
-          export ALLOW_MISSING_DEPENDENCIES=true
-          export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
-          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-          
-          mka clean
-          mka bootimage vendorbootimage
-          
-          find out/target/product/devonf/ -maxdepth 1 -name "*.img"
-
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: twrp-devonf-final
-          path: |
-            twrp/out/target/product/devonf/*.img
-            
